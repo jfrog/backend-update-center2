@@ -23,9 +23,6 @@
  */
 package org.jvnet.hudson.update_center;
 
-import org.sonatype.nexus.index.context.UnsupportedExistingLuceneIndexException;
-
-import java.io.IOException;
 import java.net.URL;
 
 public class DefaultMavenRepositoryBuilder {
@@ -35,7 +32,7 @@ public class DefaultMavenRepositoryBuilder {
         instance = new MavenRepositoryImpl();
     }
 
-    public DefaultMavenRepositoryBuilder withRemoteRepositories() throws IOException, UnsupportedExistingLuceneIndexException {
+    public DefaultMavenRepositoryBuilder withRemoteRepositories() throws Exception {
         instance.addRemoteRepository("java.net2",
                 new URL("http://updates.jenkins-ci.org/.index/nexus-maven-repository-index.gz"),
                 new URL("http://repo.jenkins-ci.org/public/"));

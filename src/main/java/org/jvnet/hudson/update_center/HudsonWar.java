@@ -24,32 +24,32 @@
 package org.jvnet.hudson.update_center;
 
 import hudson.util.VersionNumber;
-import org.sonatype.nexus.index.ArtifactInfo;
+import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
 
-import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * @author Kohsuke Kawaguchi
  */
 public class HudsonWar extends MavenArtifact {
-    public HudsonWar(MavenRepository repository, ArtifactInfo artifact) {
+    public HudsonWar(MavenRepository repository, GenericArtifactInfo artifact) {
         super(repository, artifact);
     }
 
     @Override
     public URL getURL() throws MalformedURLException {
-        return new URL("http://updates.jenkins-ci.org/download/war/"+version+"/"+ getFileName());
+        return new URL("http://updates.jenkins-ci.org/download/war/" + version + "/" + getFileName());
     }
 
     /**
      * Returns the Maven artifact representing the correpsonding core jar file.
      */
     public MavenArtifact getCoreArtifact() {
-        return new MavenArtifact(repository,new ArtifactInfo(
+        return new MavenArtifact(repository, new GenericArtifactInfo(
                 artifact.repository,
                 artifact.groupId,
-                artifact.artifactId.replace("war","core"),
+                artifact.artifactId.replace("war", "core"),
                 artifact.version,
                 artifact.classifier
         ));
@@ -57,10 +57,11 @@ public class HudsonWar extends MavenArtifact {
 
     public String getFileName() {
         String fileName;
-        if (new VersionNumber(version).compareTo(MavenRepositoryImpl.CUT_OFF)<=0)
+        if (new VersionNumber(version).compareTo(MavenRepositoryImpl.CUT_OFF) <= 0) {
             fileName = "hudson.war";
-        else
+        } else {
             fileName = "jenkins.war";
+        }
         return fileName;
     }
 }

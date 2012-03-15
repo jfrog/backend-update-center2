@@ -25,16 +25,16 @@ package org.jvnet.hudson.update_center;
 
 import hudson.util.VersionNumber;
 import net.sf.json.JSONObject;
-import org.apache.maven.artifact.resolver.AbstractArtifactResolutionException;
-import org.sonatype.nexus.index.ArtifactInfo;
+import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.*;
-import java.net.URL;
-import java.net.MalformedURLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A particular version of a plugin and its metadata.
@@ -49,7 +49,7 @@ public class HPI extends MavenArtifact {
 
     private final Pattern developersPattern = Pattern.compile("([^:]*):([^:]*):([^,]*),?");
 
-    public HPI(MavenRepository repository, PluginHistory history, ArtifactInfo artifact) throws AbstractArtifactResolutionException {
+    public HPI(MavenRepository repository, PluginHistory history, GenericArtifactInfo artifact) {
         super(repository, artifact);
         this.history = history;
     }
@@ -58,7 +58,8 @@ public class HPI extends MavenArtifact {
      * Download a plugin via more intuitive URL. This also helps us track download counts.
      */
     public URL getURL() throws MalformedURLException {
-        return new URL("http://updates.jenkins-ci.org/download/plugins/"+artifact.artifactId+"/"+version+"/"+artifact.artifactId+".hpi");
+        return new URL("http://updates.jenkins-ci.org/download/plugins/" + artifact.artifactId + "/" + version + "/" +
+                artifact.artifactId + ".hpi");
     }
 
     /**
@@ -69,8 +70,7 @@ public class HPI extends MavenArtifact {
     }
 
     /**
-     * @deprecated
-     *      Most probably you should be using {@link #getRequiredJenkinsVersion()}
+     * @deprecated Most probably you should be using {@link #getRequiredJenkinsVersion()}
      */
     public String getRequiredHudsonVersion() throws IOException {
         return getManifestAttributes().getValue("Hudson-Version");
@@ -78,14 +78,17 @@ public class HPI extends MavenArtifact {
 
     public String getRequiredJenkinsVersion() throws IOException {
         String v = getManifestAttributes().getValue("Jenkins-Version");
-        if (v!=null)        return v;
+        if (v != null) {
+            return v;
+        }
 
         v = getManifestAttributes().getValue("Hudson-Version");
         if (fixNull(v) != null) {
             try {
                 VersionNumber n = new VersionNumber(v);
-                if (n.compareTo(MavenRepositoryImpl.CUT_OFF)<=0)
+                if (n.compareTo(MavenRepositoryImpl.CUT_OFF) <= 0) {
                     return v;   // Hudson <= 1.395 is treated as Jenkins
+                }
                 // TODO: Jenkins-Version started appearing from Jenkins 1.401 POM.
                 // so maybe Hudson > 1.400 shouldn't be considered as a Jenkins plugin?
             } catch (IllegalArgumentException e) {
@@ -101,7 +104,9 @@ public class HPI extends MavenArtifact {
      * Earlier versions of the maven-hpi-plugin put "null" string literal, so we need to treat it as real null.
      */
     private static String fixNull(String v) {
-        if("null".equals(v))    return null;
+        if ("null".equals(v)) {
+            return null;
+        }
         return v;
     }
 
@@ -119,17 +124,22 @@ public class HPI extends MavenArtifact {
 
     public List<Dependency> getDependencies() throws IOException {
         String deps = getManifestAttributes().getValue("Plugin-Dependencies");
-        if(deps==null)  return Collections.emptyList();
+        if (deps == null) {
+            return Collections.emptyList();
+        }
 
         List<Dependency> r = new ArrayList<Dependency>();
-        for(String token : deps.split(","))
+        for (String token : deps.split(",")) {
             r.add(new Dependency(token));
+        }
         return r;
     }
 
     public List<Developer> getDevelopers() throws IOException {
         String devs = getManifestAttributes().getValue("Plugin-Developers");
-        if (devs == null || devs.trim().length()==0) return Collections.emptyList();
+        if (devs == null || devs.trim().length() == 0) {
+            return Collections.emptyList();
+        }
 
         List<Developer> r = new ArrayList<Developer>();
         Matcher m = developersPattern.matcher(devs);
@@ -139,15 +149,17 @@ public class HPI extends MavenArtifact {
             totalMatched += m.end() - m.start();
         }
         if (totalMatched < devs.length())
-            // ignore and move on
-            System.err.println("Unparsable developer info: '" + devs.substring(totalMatched)+"'");
+        // ignore and move on
+        {
+            System.err.println("Unparsable developer info: '" + devs.substring(totalMatched) + "'");
+        }
         return r;
     }
 
     boolean isEqualsTo(String groupId, String artifactId, String version) {
         return artifact.artifactId.equals(artifactId)
-            && artifact.groupId.equals(groupId)
-            && artifact.version.equals(version);
+                && artifact.groupId.equals(groupId)
+                && artifact.version.equals(version);
     }
 
     public static class Dependency {
@@ -157,8 +169,9 @@ public class HPI extends MavenArtifact {
 
         public Dependency(String token) {
             this.optional = token.endsWith(OPTIONAL);
-            if(optional)
-                token = token.substring(0, token.length()-OPTIONAL.length());
+            if (optional) {
+                token = token.substring(0, token.length() - OPTIONAL.length());
+            }
 
             String[] pieces = token.split(":");
             name = pieces[0];
@@ -169,9 +182,9 @@ public class HPI extends MavenArtifact {
 
         public JSONObject toJSON() {
             JSONObject o = new JSONObject();
-            o.put("name",name);
-            o.put("version",version);
-            o.put("optional",optional);
+            o.put("name", name);
+            o.put("version", version);
+            o.put("optional", optional);
             return o;
         }
     }
@@ -189,12 +202,15 @@ public class HPI extends MavenArtifact {
 
         public JSONObject toJSON() {
             JSONObject o = new JSONObject();
-            if (has(name))
+            if (has(name)) {
                 o.put("name", name);
-            if (has(developerId))
+            }
+            if (has(developerId)) {
                 o.put("developerId", developerId);
-            if (has(email))
+            }
+            if (has(email)) {
                 o.put("email", email);
+            }
 
             if (!o.isEmpty()) {
                 return o;
@@ -204,7 +220,7 @@ public class HPI extends MavenArtifact {
         }
 
         private boolean has(String s) {
-            return s!=null && s.length()>0;
+            return s != null && s.length() > 0;
         }
     }
 

@@ -1,11 +1,7 @@
 package org.jvnet.hudson.update_center;
 
 import hudson.util.VersionNumber;
-import org.apache.maven.artifact.resolver.AbstractArtifactResolutionException;
-import org.codehaus.plexus.PlexusContainerException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.sonatype.nexus.index.ArtifactInfo;
-import org.sonatype.nexus.index.context.UnsupportedExistingLuceneIndexException;
+import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,30 +29,32 @@ public class VersionCappedMavenRepository extends MavenRepository {
     }
 
     @Override
-    public TreeMap<VersionNumber, HudsonWar> getHudsonWar() throws IOException, AbstractArtifactResolutionException {
-        return new TreeMap<VersionNumber, HudsonWar>(base.getHudsonWar().tailMap(cap,true));
+    public TreeMap<VersionNumber, HudsonWar> getHudsonWar() throws IOException {
+        return new TreeMap<VersionNumber, HudsonWar>(base.getHudsonWar().tailMap(cap, true));
     }
 
     @Override
-    public Collection<PluginHistory> listHudsonPlugins() throws PlexusContainerException, ComponentLookupException, IOException, UnsupportedExistingLuceneIndexException, AbstractArtifactResolutionException {
+    public Collection<PluginHistory> listHudsonPlugins() throws IOException {
         Collection<PluginHistory> r = base.listHudsonPlugins();
-        for (Iterator<PluginHistory> jtr = r.iterator(); jtr.hasNext();) {
+        for (Iterator<PluginHistory> jtr = r.iterator(); jtr.hasNext(); ) {
             PluginHistory h = jtr.next();
 
-            for (Iterator<Entry<VersionNumber, HPI>> itr = h.artifacts.entrySet().iterator(); itr.hasNext();) {
-                Entry<VersionNumber, HPI> e =  itr.next();
+            for (Iterator<Entry<VersionNumber, HPI>> itr = h.artifacts.entrySet().iterator(); itr.hasNext(); ) {
+                Entry<VersionNumber, HPI> e = itr.next();
                 try {
                     VersionNumber v = new VersionNumber(e.getValue().getRequiredJenkinsVersion());
-                    if (v.compareTo(cap)<=0)
+                    if (v.compareTo(cap) <= 0) {
                         continue;
+                    }
                 } catch (IOException x) {
                     x.printStackTrace();
                 }
                 itr.remove();
             }
 
-            if (h.artifacts.isEmpty())
+            if (h.artifacts.isEmpty()) {
                 jtr.remove();
+            }
         }
 
         return r;
@@ -64,7 +62,7 @@ public class VersionCappedMavenRepository extends MavenRepository {
 
 
     @Override
-    public File resolve(ArtifactInfo a, String type, String classifier) throws AbstractArtifactResolutionException {
+    public File resolve(GenericArtifactInfo a, String type, String classifier) throws IOException {
         return base.resolve(a, type, classifier);
     }
 }
