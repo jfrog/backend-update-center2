@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jvnet.hudson.update_center;
+package org.jvnet.hudson.update_center.artifact;
 
 import hudson.plugins.jira.soap.RemotePage;
 import net.sf.json.JSONArray;
@@ -32,7 +32,8 @@ import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
-import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
+import org.jvnet.hudson.update_center.ConfluencePluginList;
+import org.jvnet.hudson.update_center.PluginHistory;
 
 import java.io.IOException;
 import java.rmi.RemoteException;

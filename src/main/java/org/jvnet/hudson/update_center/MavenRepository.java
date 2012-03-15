@@ -2,6 +2,8 @@ package org.jvnet.hudson.update_center;
 
 import hudson.util.VersionNumber;
 import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
+import org.jvnet.hudson.update_center.artifact.HPI;
+import org.jvnet.hudson.update_center.artifact.HudsonWar;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,9 +76,9 @@ public abstract class MavenRepository {
      */
     public abstract TreeMap<VersionNumber, HudsonWar> getHudsonWar() throws IOException;
 
-    protected File resolve(GenericArtifactInfo a) throws IOException {
+    public File resolve(GenericArtifactInfo a) throws IOException {
         return resolve(a, a.packaging, null);
     }
 
-    protected abstract File resolve(GenericArtifactInfo a, String type, String classifier) throws IOException;
+    public abstract File resolve(GenericArtifactInfo a, String type, String classifier) throws IOException;
 }

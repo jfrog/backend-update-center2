@@ -21,10 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jvnet.hudson.update_center;
+package org.jvnet.hudson.update_center.artifact;
 
 import hudson.util.VersionNumber;
-import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
+import org.jvnet.hudson.update_center.MavenRepository;
+import org.jvnet.hudson.update_center.MavenRepositoryImpl;
 
 import java.net.MalformedURLException;
 import java.net.URL;

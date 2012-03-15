@@ -23,14 +23,15 @@
  */
 package org.jvnet.hudson.update_center;
 
+import org.jvnet.hudson.update_center.artifact.MavenArtifact;
+
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
-import java.net.URL;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -39,14 +40,16 @@ public class IndexHtmlBuilder implements Closeable {
     private final PrintWriter out;
 
     public IndexHtmlBuilder(File dir, String title) throws IOException {
-        this(openIndexHtml(dir),title);
+        this(openIndexHtml(dir), title);
     }
 
     private static PrintWriter openIndexHtml(File dir) throws IOException {
-        if (dir==null)  return new PrintWriter(new ByteArrayOutputStream()); // ignore output
-        
+        if (dir == null) {
+            return new PrintWriter(new ByteArrayOutputStream()); // ignore output
+        }
+
         dir.mkdirs();
-        return new PrintWriter(new FileWriter(new File(dir,"index.html")));
+        return new PrintWriter(new FileWriter(new File(dir, "index.html")));
     }
 
     public IndexHtmlBuilder(PrintWriter out, String title) {
@@ -54,14 +57,14 @@ public class IndexHtmlBuilder implements Closeable {
 
         out.println(
                 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n" +
-                "<html>\n" +
-                " <head>\n" +
-                "  <title>"+title+"</title>\n" +
-                " </head>\n" +
-                " <body>\n" +
-                "<h1>"+title+"</h1>\n" +
-                "<hr>\n" +
-                "<table>"
+                        "<html>\n" +
+                        " <head>\n" +
+                        "  <title>" + title + "</title>\n" +
+                        " </head>\n" +
+                        " <body>\n" +
+                        "<h1>" + title + "</h1>\n" +
+                        "<hr>\n" +
+                        "<table>"
         );
     }
 
@@ -71,7 +74,8 @@ public class IndexHtmlBuilder implements Closeable {
 
     public void add(String url, String caption) throws MalformedURLException {
         out.println(
-            "<tr><td><img src='http://jenkins-ci.org/images/jar.png'/></td><td><a href='"+ url +"'>"+ caption +"</a></td></tr>"
+                "<tr><td><img src='http://jenkins-ci.org/images/jar.png'/></td><td><a href='" + url + "'>" + caption +
+                        "</a></td></tr>"
         );
     }
 

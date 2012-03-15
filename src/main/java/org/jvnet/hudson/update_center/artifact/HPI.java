@@ -21,11 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jvnet.hudson.update_center;
+package org.jvnet.hudson.update_center.artifact;
 
 import hudson.util.VersionNumber;
 import net.sf.json.JSONObject;
-import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
+import org.jvnet.hudson.update_center.MavenRepository;
+import org.jvnet.hudson.update_center.MavenRepositoryImpl;
+import org.jvnet.hudson.update_center.PluginHistory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -156,7 +158,7 @@ public class HPI extends MavenArtifact {
         return r;
     }
 
-    boolean isEqualsTo(String groupId, String artifactId, String version) {
+    public boolean isEqualsTo(String groupId, String artifactId, String version) {
         return artifact.artifactId.equals(artifactId)
                 && artifact.groupId.equals(groupId)
                 && artifact.version.equals(version);

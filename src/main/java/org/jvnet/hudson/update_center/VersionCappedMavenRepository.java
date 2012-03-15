@@ -2,6 +2,8 @@ package org.jvnet.hudson.update_center;
 
 import hudson.util.VersionNumber;
 import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
+import org.jvnet.hudson.update_center.artifact.HPI;
+import org.jvnet.hudson.update_center.artifact.HudsonWar;
 
 import java.io.File;
 import java.io.IOException;

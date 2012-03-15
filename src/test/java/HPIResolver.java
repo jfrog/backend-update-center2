@@ -21,9 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import org.jvnet.hudson.update_center.*;
 
-import java.util.*;
+import org.jvnet.hudson.update_center.DefaultMavenRepositoryBuilder;
+import org.jvnet.hudson.update_center.MavenRepositoryImpl;
+import org.jvnet.hudson.update_center.artifact.HPI;
+import org.jvnet.hudson.update_center.artifact.MavenArtifact;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 

@@ -46,6 +46,9 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.classworlds.ClassWorld;
 import org.codehaus.plexus.component.repository.ComponentDescriptor;
 import org.jvnet.hudson.update_center.artifact.GenericArtifactInfo;
+import org.jvnet.hudson.update_center.artifact.HPI;
+import org.jvnet.hudson.update_center.artifact.HudsonWar;
+import org.jvnet.hudson.update_center.artifact.Plugin;
 import org.sonatype.nexus.index.ArtifactInfo;
 import org.sonatype.nexus.index.FlatSearchRequest;
 import org.sonatype.nexus.index.FlatSearchResponse;
@@ -212,7 +215,7 @@ public class MavenRepositoryImpl extends MavenRepository {
         }
     }
 
-    protected File resolve(GenericArtifactInfo a, String type, String classifier) throws IOException {
+    public File resolve(GenericArtifactInfo a, String type, String classifier) throws IOException {
         Artifact artifact = af.createArtifactWithClassifier(a.groupId, a.artifactId, a.version, type, classifier);
         try {
             ar.resolve(artifact, remoteRepositories, local);

@@ -1,4 +1,7 @@
-import org.jvnet.hudson.update_center.*;
+import org.jvnet.hudson.update_center.DefaultMavenRepositoryBuilder;
+import org.jvnet.hudson.update_center.MavenRepositoryImpl;
+import org.jvnet.hudson.update_center.PluginHistory;
+import org.jvnet.hudson.update_center.artifact.HPI;
 
 import java.util.Collection;
 import java.util.Set;
@@ -6,11 +9,11 @@ import java.util.TreeSet;
 
 /**
  * List up existing groupIds used by plugins.
- * 
+ *
  * @author Kohsuke Kawaguchi
  */
 public class ListExisting {
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         MavenRepositoryImpl r = DefaultMavenRepositoryBuilder.createStandardInstance();
 
         Set<String> groupIds = new TreeSet<String>();
