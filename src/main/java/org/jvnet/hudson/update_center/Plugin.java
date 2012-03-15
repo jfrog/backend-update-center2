@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -252,7 +253,7 @@ public class Plugin {
         if (!labelsRead) {
             readLabels();
         }
-        return labels;
+        return Arrays.copyOf(labels, labels.length);
     }
 
     public boolean isDeprecated() {

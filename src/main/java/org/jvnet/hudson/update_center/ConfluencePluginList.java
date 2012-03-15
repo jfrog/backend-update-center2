@@ -44,30 +44,30 @@ import java.util.regex.Pattern;
 
 /**
  * List of plugins from confluence. Primarily serve as a cache.
- *
- * <p>
- * See http://confluence.atlassian.com/display/DOC/Remote+API+Specification
- * for the confluence API.
+ * <p/>
+ * <p/>
+ * See http://confluence.atlassian.com/display/DOC/Remote+API+Specification for the confluence API.
  *
  * @author Kohsuke Kawaguchi
  */
 public class ConfluencePluginList {
     private final ConfluenceSoapService service;
-    private final Map<String,RemotePageSummary> children = new HashMap<String, RemotePageSummary>();
+    private final Map<String, RemotePageSummary> children = new HashMap<String, RemotePageSummary>();
     private final String[] normalizedTitles;
 
-    private final Map<String,RemotePage> pageCache = new HashMap<String, RemotePage>();
-    private final Map<Long,String[]> labelCache = new HashMap<Long, String[]>();
+    private final Map<String, RemotePage> pageCache = new HashMap<String, RemotePage>();
+    private final Map<Long, String[]> labelCache = new HashMap<Long, String[]>();
 
     private String wikiSessionId;
-    private final String WIKI_URL = "https://wiki.jenkins-ci.org/";
+    private static final String WIKI_URL = "https://wiki.jenkins-ci.org/";
 
     public ConfluencePluginList() throws IOException, ServiceException {
         service = Confluence.connect(new URL(WIKI_URL));
         RemotePage page = service.getPage("", "JENKINS", "Plugins");
 
-        for (RemotePageSummary child : service.getChildren("", page.getId()))
-            children.put(normalize(child.getTitle()),child);
+        for (RemotePageSummary child : service.getChildren("", page.getId())) {
+            children.put(normalize(child.getTitle()), child);
+        }
         normalizedTitles = children.keySet().toArray(new String[children.size()]);
     }
 
@@ -76,8 +76,10 @@ public class ConfluencePluginList {
      */
     private String normalize(String title) {
         title = title.toLowerCase().trim();
-        if(title.endsWith("plugin"))    title=title.substring(0,title.length()-6).trim();
-        return title.replace(" ","-");
+        if (title.endsWith("plugin")) {
+            title = title.substring(0, title.length() - 6).trim();
+        }
+        return title.replace(" ", "-");
     }
 
     /**
@@ -88,40 +90,45 @@ public class ConfluencePluginList {
         pluginArtifactId = pluginArtifactId.toLowerCase();
 
         String nearest = EditDistance.findNearest(pluginArtifactId, normalizedTitles);
-        if (EditDistance.editDistance(nearest,pluginArtifactId) <= 1) {
+        if (EditDistance.editDistance(nearest, pluginArtifactId) <= 1) {
             System.out.println("** No wiki page specified.. picking one with similar name."
-                               + "\nUsing '"+nearest+"' for "+pluginArtifactId);
-            return service.getPage("","JENKINS",children.get(nearest).getTitle());
-        } else
+                    + "\nUsing '" + nearest + "' for " + pluginArtifactId);
+            return service.getPage("", "JENKINS", children.get(nearest).getTitle());
+        } else {
             return null;    // too far
+        }
     }
 
     public RemotePage getPage(String url) throws RemoteException {
         Matcher tinylink = TINYLINK_PATTERN.matcher(url);
-        if (tinylink.matches()) try {
-            // Avoid creating lots of sessions on wiki server.. get a session and reuse it.
-            if (wikiSessionId == null)
-                wikiSessionId = initSession(WIKI_URL);
-            url = checkRedirect(
-                    WIKI_URL + "pages/tinyurl.action?urlIdentifier=" + tinylink.group(1),
-                    wikiSessionId);
-        } catch (IOException e) {
-            throw new RemoteException("Failed to lookup tinylink redirect", e);
+        if (tinylink.matches()) {
+            try {
+                // Avoid creating lots of sessions on wiki server.. get a session and reuse it.
+                if (wikiSessionId == null) {
+                    wikiSessionId = initSession(WIKI_URL);
+                }
+                url = checkRedirect(
+                        WIKI_URL + "pages/tinyurl.action?urlIdentifier=" + tinylink.group(1),
+                        wikiSessionId);
+            } catch (IOException e) {
+                throw new RemoteException("Failed to lookup tinylink redirect", e);
+            }
         }
-        for( String p : WIKI_PREFIXES ) {
-            if (!url.startsWith(p))
+        for (String p : WIKI_PREFIXES) {
+            if (!url.startsWith(p)) {
                 continue;
+            }
 
-            String pageName = url.substring(p.length()).replace('+',' '); // poor hack for URL escape
+            String pageName = url.substring(p.length()).replace('+', ' '); // poor hack for URL escape
 
             RemotePage page = pageCache.get(pageName);
-            if (page==null) {
+            if (page == null) {
                 page = service.getPage("", "JENKINS", pageName);
-                pageCache.put(pageName,page);
+                pageCache.put(pageName, page);
             }
             return page;
         }
-        throw new IllegalArgumentException("** Failed to resolve "+url);
+        throw new IllegalArgumentException("** Failed to resolve " + url);
     }
 
     private static String checkRedirect(String url, String sessionId) throws IOException {
@@ -134,35 +141,43 @@ public class ConfluencePluginList {
     }
 
     private static HttpURLConnection connect(String url, String sessionId) throws IOException {
-        HttpURLConnection huc = (HttpURLConnection)new URL(url).openConnection();
+        HttpURLConnection huc = (HttpURLConnection) new URL(url).openConnection();
         huc.setInstanceFollowRedirects(false);
         huc.setDoOutput(false);
-        if (sessionId != null) huc.addRequestProperty("Cookie", sessionId);
+        if (sessionId != null) {
+            huc.addRequestProperty("Cookie", sessionId);
+        }
         InputStream i = huc.getInputStream();
-        while (i.read() >= 0) ; // Drain stream
+        while (i.read() >= 0) {
+            ; // Drain stream
+        }
         return huc;
     }
 
     public String[] getLabels(RemotePage page) throws RemoteException {
         String[] r = labelCache.get(page.getId());
-        if (r==null) {
+        if (r == null) {
             RemoteLabel[] labels = service.getLabelsById("", page.getId());
-            if (labels==null) return new String[0];
+            if (labels == null) {
+                return new String[0];
+            }
             ArrayList<String> result = new ArrayList<String>(labels.length);
-            for (RemoteLabel label : labels)
-                if (label.getName().startsWith("plugin-"))
+            for (RemoteLabel label : labels) {
+                if (label.getName().startsWith("plugin-")) {
                     result.add(label.getName().substring(7));
+                }
+            }
             r = result.toArray(new String[result.size()]);
-            labelCache.put(page.getId(),r);
+            labelCache.put(page.getId(), r);
         }
         return r;
     }
 
     private static final String[] WIKI_PREFIXES = {
-        "https://wiki.jenkins-ci.org/display/JENKINS/",
-        "http://wiki.jenkins-ci.org/display/JENKINS/",
-        "http://wiki.hudson-ci.org/display/HUDSON/",
-        "http://hudson.gotdns.com/wiki/display/HUDSON/",
+            "https://wiki.jenkins-ci.org/display/JENKINS/",
+            "http://wiki.jenkins-ci.org/display/JENKINS/",
+            "http://wiki.hudson-ci.org/display/HUDSON/",
+            "http://hudson.gotdns.com/wiki/display/HUDSON/",
     };
 
     private static final Pattern TINYLINK_PATTERN = Pattern.compile(".*/x/(\\w+)");

@@ -56,7 +56,6 @@ import org.sonatype.nexus.index.context.NexusAnalyzer;
 import org.sonatype.nexus.index.context.NexusIndexWriter;
 import org.sonatype.nexus.index.context.UnsupportedExistingLuceneIndexException;
 import org.sonatype.nexus.index.updater.IndexDataReader;
-import org.sonatype.nexus.index.updater.IndexDataReader.IndexDataReadResult;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -136,10 +135,6 @@ public class MavenRepositoryImpl extends MavenRepository {
                         new DefaultRepositoryLayout(), POLICY, POLICY));
     }
 
-    public void addRemoteRepository(String id, URL repository) throws Exception {
-        addRemoteRepository(id, new URL(repository, ".index/nexus-maven-repository-index.gz"), repository);
-    }
-
     public void addRemoteRepository(String id, URL remoteIndex, URL repository) throws Exception {
         addRemoteRepository(id, loadIndex(id, remoteIndex), repository);
     }
@@ -164,8 +159,11 @@ public class MavenRepositoryImpl extends MavenRepository {
             dir.mkdirs();
             File tmp = new File(dir, "index_" + getExtension(url));
             FileOutputStream o = new FileOutputStream(tmp);
-            IOUtils.copy(con.getInputStream(), o);
-            o.close();
+            try {
+                IOUtils.copy(con.getInputStream(), o);
+            } finally {
+                o.close();
+            }
 
             if (expanded.exists()) {
                 FileUtils.deleteDirectory(expanded);
@@ -178,9 +176,8 @@ public class MavenRepositoryImpl extends MavenRepository {
                 FileInputStream in = new FileInputStream(tmp);
                 try {
                     IndexDataReader dr = new IndexDataReader(in);
-                    IndexDataReadResult result = dr.readIndex(w,
-                            new DefaultIndexingContext(id, id, null, expanded, null, null, NexusIndexer.DEFAULT_INDEX,
-                                    true));
+                    dr.readIndex(w, new DefaultIndexingContext(id, id, null, expanded, null, null,
+                            NexusIndexer.DEFAULT_INDEX, true));
                 } finally {
                     IndexUtils.close(w);
                     IOUtils.closeQuietly(in);
