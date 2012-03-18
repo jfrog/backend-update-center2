@@ -8,7 +8,6 @@ import org.jenkins_ci.update_center.model.PluginHistory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -30,11 +29,6 @@ public class VersionCappedMavenRepository extends MavenRepository {
     public VersionCappedMavenRepository(MavenRepository base, VersionNumber cap) {
         this.base = base;
         this.cap = cap;
-    }
-
-    @Override
-    public TreeMap<VersionNumber, HudsonWar> getHudsonWar() throws IOException {
-        return new TreeMap<VersionNumber, HudsonWar>(base.getHudsonWar().tailMap(cap, true));
     }
 
     @Override
@@ -71,12 +65,7 @@ public class VersionCappedMavenRepository extends MavenRepository {
     }
 
     @Override
-    public void addRemoteRepository(String id, File indexDirectory, URL repository) throws Exception {
-        base.addRemoteRepository(id, indexDirectory, repository);
-    }
-
-    @Override
-    public void addRemoteRepository(String id, URL remoteIndex, URL repository) throws Exception {
-        base.addRemoteRepository(id, remoteIndex, repository);
+    protected void listWar(TreeMap<VersionNumber, HudsonWar> r, String groupId, VersionNumber cap) throws IOException {
+        base.listWar(r, groupId, cap);
     }
 }

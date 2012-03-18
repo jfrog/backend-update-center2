@@ -23,32 +23,19 @@
  */
 package org.jenkins_ci.update_center;
 
+import org.jenkins_ci.update_center.repo.ArtifactoryRepositoryImpl;
 import org.jenkins_ci.update_center.repo.MavenRepository;
-import org.jenkins_ci.update_center.repo.NexusRepositoryImpl;
-
-import java.net.URL;
 
 public class DefaultMavenRepositoryBuilder {
     private MavenRepository instance = null;
 
     public DefaultMavenRepositoryBuilder() throws Exception {
-        instance = new NexusRepositoryImpl();
-    }
-
-    public DefaultMavenRepositoryBuilder withRemoteRepositories() throws Exception {
-        instance.addRemoteRepository("java.net2",
-                new URL("http://updates.jenkins-ci.org/.index/nexus-maven-repository-index.gz"),
-                new URL("http://repo.jenkins-ci.org/public/"));
-        return this;
+        instance = new ArtifactoryRepositoryImpl();
     }
 
     private DefaultMavenRepositoryBuilder withMaxPlugins(Integer maxPlugins) {
         instance.setMaxPlugins(maxPlugins);
         return this;
-    }
-
-    public MavenRepository getInstance() {
-        return instance;
     }
 
     /**
@@ -57,7 +44,7 @@ public class DefaultMavenRepositoryBuilder {
      * @throws Exception
      */
     public static MavenRepository createStandardInstance(Integer maxPlugins) throws Exception {
-        return new DefaultMavenRepositoryBuilder().withRemoteRepositories().withMaxPlugins(maxPlugins).instance;
+        return new DefaultMavenRepositoryBuilder().withMaxPlugins(maxPlugins).instance;
     }
 
     public static MavenRepository createStandardInstance() throws Exception {

@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
-            <artifactId>nexus-repository-impl</artifactId>
+            <artifactId>artifactory-repository-impl</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

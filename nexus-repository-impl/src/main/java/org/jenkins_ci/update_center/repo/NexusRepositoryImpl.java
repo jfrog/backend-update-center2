@@ -48,7 +48,6 @@ import org.codehaus.plexus.component.repository.ComponentDescriptor;
 import org.jenkins_ci.update_center.model.GenericArtifactInfo;
 import org.jenkins_ci.update_center.model.HPI;
 import org.jenkins_ci.update_center.model.HudsonWar;
-import org.jenkins_ci.update_center.model.MavenArtifact;
 import org.jenkins_ci.update_center.model.PluginHistory;
 import org.sonatype.nexus.index.ArtifactInfo;
 import org.sonatype.nexus.index.FlatSearchRequest;
@@ -111,23 +110,7 @@ public class NexusRepositoryImpl extends MavenRepository {
         local = arf.createArtifactRepository("local",
                 new File(new File(System.getProperty("user.home")), ".m2/repository").toURI().toURL().toExternalForm(),
                 new DefaultRepositoryLayout(), POLICY, POLICY);
-    }
-
-    /**
-     * @param id             Repository ID. This ID has to match the ID in the repository index, due to a design bug in
-     *                       Maven.
-     * @param indexDirectory Directory that contains exploded index zip file.
-     * @param repository     URL of the Maven repository. Used to resolve artifacts.
-     */
-    public void addRemoteRepository(String id, File indexDirectory, URL repository) throws Exception {
-        indexer.addIndexingContext(id, id, null, indexDirectory, null, null, NexusIndexer.DEFAULT_INDEX);
-        remoteRepositories.add(
-                arf.createArtifactRepository(id, repository.toExternalForm(),
-                        new DefaultRepositoryLayout(), POLICY, POLICY));
-    }
-
-    public void addRemoteRepository(String id, URL remoteIndex, URL repository) throws Exception {
-        addRemoteRepository(id, loadIndex(id, remoteIndex), repository);
+        addRemoteRepositories();
     }
 
     /**
@@ -254,14 +237,7 @@ public class NexusRepositoryImpl extends MavenRepository {
         return result.subList(0, maxPlugins);
     }
 
-    public TreeMap<VersionNumber, HudsonWar> getHudsonWar() throws IOException {
-        TreeMap<VersionNumber, HudsonWar> r = new TreeMap<VersionNumber, HudsonWar>(VersionNumber.DESCENDING);
-        listWar(r, "org.jenkins-ci.main", null);
-        listWar(r, "org.jvnet.hudson.main", MavenArtifact.CUT_OFF);
-        return r;
-    }
-
-    private void listWar(TreeMap<VersionNumber, HudsonWar> r, String groupId, VersionNumber cap) throws IOException {
+    protected void listWar(TreeMap<VersionNumber, HudsonWar> r, String groupId, VersionNumber cap) throws IOException {
         BooleanQuery q = new BooleanQuery();
         q.add(indexer.constructQuery(ArtifactInfo.GROUP_ID, groupId), Occur.MUST);
         q.add(indexer.constructQuery(ArtifactInfo.PACKAGING, "war"), Occur.MUST);
@@ -316,5 +292,15 @@ public class NexusRepositoryImpl extends MavenRepository {
 
     private GenericArtifactInfo getGenericArtifactInfo(ArtifactInfo a) {
         return new GenericArtifactInfo(a.repository, a.groupId, a.artifactId, a.version, a.classifier, a.packaging);
+    }
+
+    private void addRemoteRepositories() throws Exception {
+        String id = "java.net2";
+        File indexDirectory = loadIndex(id,
+                new URL("http://updates.jenkins-ci.org/.index/nexus-maven-repository-index.gz"));
+        URL repository = new URL("http://repo.jenkins-ci.org/public/");
+        indexer.addIndexingContext(id, id, null, indexDirectory, null, null, NexusIndexer.DEFAULT_INDEX);
+        remoteRepositories.add(arf.createArtifactRepository(id, repository.toExternalForm(),
+                new DefaultRepositoryLayout(), POLICY, POLICY));
     }
 }

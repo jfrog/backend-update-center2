@@ -4,11 +4,11 @@ import hudson.util.VersionNumber;
 import org.jenkins_ci.update_center.model.GenericArtifactInfo;
 import org.jenkins_ci.update_center.model.HPI;
 import org.jenkins_ci.update_center.model.HudsonWar;
+import org.jenkins_ci.update_center.model.MavenArtifact;
 import org.jenkins_ci.update_center.model.PluginHistory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -75,10 +75,12 @@ public abstract class MavenRepository {
     }
 
 
-    /**
-     * Discover all hudson.war versions.
-     */
-    public abstract TreeMap<VersionNumber, HudsonWar> getHudsonWar() throws IOException;
+    public TreeMap<VersionNumber, HudsonWar> getHudsonWar() throws IOException {
+        TreeMap<VersionNumber, HudsonWar> r = new TreeMap<VersionNumber, HudsonWar>(VersionNumber.DESCENDING);
+        listWar(r, "org.jenkins-ci.main", null);
+        listWar(r, "org.jvnet.hudson.main", MavenArtifact.CUT_OFF);
+        return r;
+    }
 
     public File resolve(GenericArtifactInfo a) throws IOException {
         return resolve(a, a.packaging, a.classifier);
@@ -90,9 +92,8 @@ public abstract class MavenRepository {
         this.maxPlugins = maxPlugins;
     }
 
-    public abstract void addRemoteRepository(String id, File indexDirectory, URL repository) throws Exception;
-
-    public abstract void addRemoteRepository(String id, URL remoteIndex, URL repository) throws Exception;
+    protected abstract void listWar(TreeMap<VersionNumber, HudsonWar> r, String groupId, VersionNumber cap)
+            throws IOException;
 
     public File resolvePOM(GenericArtifactInfo artifact) throws IOException {
         return resolve(artifact, "pom", null);
