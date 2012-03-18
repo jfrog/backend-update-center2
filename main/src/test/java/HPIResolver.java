@@ -50,8 +50,9 @@ public class HPIResolver {
         MavenRepository mavenRepository = DefaultMavenRepositoryBuilder.createStandardInstance();
 
         HPI plugin = mavenRepository.findPlugin(groupId, artifactId, version);
-
-        MavenArtifact mavenArtifact = new MavenArtifact(mavenRepository.resolve(plugin.artifact), plugin.artifact);
+        plugin.file = mavenRepository.resolve(plugin.artifact);
+        MavenArtifact mavenArtifact = new MavenArtifact(plugin.artifact);
+        mavenArtifact.file = plugin.file;
         Manifest manifest = mavenArtifact.getManifest();
 
         Attributes mainAttributes = manifest.getMainAttributes();

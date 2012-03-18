@@ -394,15 +394,25 @@ public class Main {
         for (PluginHistory hpi : repository.listHudsonPlugins()) {
             try {
                 System.out.println(hpi.artifactId);
+                List<HPI> versions = new ArrayList<HPI>(hpi.artifacts.values());
+                HPI latest = versions.get(0);
+                latest.file = repository.resolve(latest.artifact);
+                HPI previous = versions.size() > 1 ? versions.get(1) : null;
+                if (previous != null) {
+                    previous.file = repository.resolve(previous.artifact);
+                }
 
-                File pomFile = repository.resolvePOM(hpi.artifacts.values().iterator().next().artifact);
+                File pomFile = repository.resolvePOM(latest.artifact);
                 Document pomDoc = readPOM(saxReader, pomFile);
                 Document parentPom = null;
                 if (pomDoc != null) {
                     parentPom = resolveParentPom(repository, saxReader, pomDoc);
                 }
                 RemotePage hpiWikiPage = findPage(hpi.artifactId, pomDoc, cpl);
-                Plugin plugin = new Plugin(hpi, pomDoc, parentPom, hpiWikiPage, readLabels(hpiWikiPage, cpl));
+
+                Plugin plugin = new Plugin(hpi.artifactId, latest, previous, pomDoc, parentPom, hpiWikiPage,
+                        readLabels(hpiWikiPage, cpl));
+                checkLatestDate(repository, versions, latest);
                 if (plugin.isDeprecated()) {
                     System.out.println("=> Plugin is deprecated.. skipping.");
                     continue;
@@ -587,6 +597,7 @@ public class Main {
         }
 
         HudsonWar latest = wars.get(wars.firstKey());
+        latest.file = repository.resolve(latest.artifact);
         JSONObject core = latest.toJSON("core");
         System.out.println("core\n=> " + core);
 
@@ -687,7 +698,7 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        return null;
+        return new String[0];
     }
 
     private SAXReader createXmlReader() {
@@ -709,6 +720,22 @@ public class Main {
             return readPOM(saxReader, parentPomFile);
         }
         return null;
+    }
+
+    private void checkLatestDate(MavenRepository repository, Collection<HPI> artifacts, HPI latestByVersion)
+            throws IOException {
+        TreeMap<Long, HPI> artifactsByDate = new TreeMap<Long, HPI>();
+        for (HPI h : artifacts) {
+            h.file = repository.resolve(h.artifact);
+            artifactsByDate.put(h.getTimestamp(), h);
+        }
+        HPI latestByDate = artifactsByDate.get(artifactsByDate.lastKey());
+        if (latestByDate != latestByVersion) {
+            System.out.println(
+                    "** Latest-by-version (" + latestByVersion.version + ','
+                            + latestByVersion.getTimestampAsString() + ") doesn't match latest-by-date ("
+                            + latestByDate.version + ',' + latestByDate.getTimestampAsString() + ')');
+        }
     }
 
     static {

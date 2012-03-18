@@ -32,14 +32,11 @@ import org.dom4j.Node;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -94,41 +91,9 @@ public class Plugin {
         markDeprecated();
     }
 
-    public Plugin(PluginHistory hpi, Document pom, Document parentPom, RemotePage page, String[] labels)
-            throws IOException {
-        this.artifactId = hpi.artifactId;
-        List<HPI> versions = new ArrayList<HPI>(hpi.artifacts.values());
-        this.latest = versions.get(0);
-        this.previous = versions.size() > 1 ? versions.get(1) : null;
-
-        // Doublecheck that latest-by-version is also latest-by-date:
-        checkLatestDate(versions, latest);
-
-        this.pom = pom;
-        this.parentPom = parentPom;
-        this.page = page;
-        this.labels = Arrays.copyOf(labels, labels.length);
-        markDeprecated();
-    }
-
     public Plugin(HPI hpi, Document pom, Document parentPom, RemotePage page, String[] labels) throws IOException {
         this(hpi.artifact.artifactId, hpi, null, pom, parentPom, page, labels);
     }
-
-    private static void checkLatestDate(Collection<HPI> artifacts, HPI latestByVersion) throws IOException {
-        TreeMap<Long, HPI> artifactsByDate = new TreeMap<Long, HPI>();
-        for (HPI h : artifacts) {
-            artifactsByDate.put(h.getTimestamp(), h);
-        }
-        HPI latestByDate = artifactsByDate.get(artifactsByDate.lastKey());
-        if (latestByDate != latestByVersion) {
-            System.out.println(
-                    "** Latest-by-version (" + latestByVersion.version + ','
-                            + latestByVersion.getTimestampAsString() + ") doesn't match latest-by-date ("
-                            + latestByDate.version + ',' + latestByDate.getTimestampAsString() + ')');
-        }
-    }
-
 
     private static Node selectSingleNode(Document pom, String path) {
         Node result = pom.selectSingleNode(path);

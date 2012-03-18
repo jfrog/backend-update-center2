@@ -295,13 +295,11 @@ public class NexusRepositoryImpl extends MavenRepository {
 
     protected HPI createHpiArtifact(ArtifactInfo a)
             throws IOException {
-        GenericArtifactInfo artifactInfo = getGenericArtifactInfo(a);
-        return new HPI(resolve(artifactInfo), artifactInfo);
+        return new HPI(getGenericArtifactInfo(a));
     }
 
     protected HudsonWar createHudsonWarArtifact(ArtifactInfo a) throws IOException {
-        GenericArtifactInfo artifactInfo = getGenericArtifactInfo(a);
-        return new HudsonWar(resolve(artifactInfo), artifactInfo);
+        return new HudsonWar(getGenericArtifactInfo(a));
     }
 
     private static final Properties IGNORE = new Properties();

@@ -26,7 +26,6 @@ package org.jenkins_ci.update_center.model;
 import hudson.util.VersionNumber;
 import net.sf.json.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -44,8 +43,8 @@ import java.util.regex.Pattern;
 public class HPI extends MavenArtifact {
     private final Pattern developersPattern = Pattern.compile("([^:]*):([^:]*):([^,]*),?");
 
-    public HPI(File hpi, GenericArtifactInfo artifact) {
-        super(hpi, artifact);
+    public HPI(GenericArtifactInfo artifact) {
+        super(artifact);
     }
 
     /**

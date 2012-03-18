@@ -25,7 +25,6 @@ package org.jenkins_ci.update_center.model;
 
 import hudson.util.VersionNumber;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -33,8 +32,8 @@ import java.net.URL;
  * @author Kohsuke Kawaguchi
  */
 public class HudsonWar extends MavenArtifact {
-    public HudsonWar(File war, GenericArtifactInfo artifact) {
-        super(war, artifact);
+    public HudsonWar(GenericArtifactInfo artifact) {
+        super(artifact);
     }
 
     @Override

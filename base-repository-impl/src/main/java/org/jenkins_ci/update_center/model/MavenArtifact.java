@@ -58,14 +58,13 @@ public class MavenArtifact {
 
     public final GenericArtifactInfo artifact;
     public final String version;
-    public final File file;
+    public File file;
 
     // lazily computed
     private long timestamp;
     private Manifest manifest;
 
-    public MavenArtifact(File file, GenericArtifactInfo artifact) {
-        this.file = file;
+    public MavenArtifact(GenericArtifactInfo artifact) {
         this.artifact = artifact;
         version = artifact.version;
     }
