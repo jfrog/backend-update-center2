@@ -33,21 +33,21 @@ public class DefaultMavenRepositoryBuilder {
         instance = new ArtifactoryRepositoryImpl();
     }
 
-    private DefaultMavenRepositoryBuilder withMaxPlugins(Integer maxPlugins) {
+    public DefaultMavenRepositoryBuilder withMaxPlugins(Integer maxPlugins) {
         instance.setMaxPlugins(maxPlugins);
         return this;
     }
 
-    /**
-     * @param maxPlugins can be null.
-     * @return
-     * @throws Exception
-     */
-    public static MavenRepository createStandardInstance(Integer maxPlugins) throws Exception {
-        return new DefaultMavenRepositoryBuilder().withMaxPlugins(maxPlugins).instance;
+    public DefaultMavenRepositoryBuilder withCredentials(String username, String password) {
+        instance.setCredentials(username, password);
+        return this;
+    }
+
+    public MavenRepository getInstance() {
+        return instance;
     }
 
     public static MavenRepository createStandardInstance() throws Exception {
-        return createStandardInstance(null);
+        return new DefaultMavenRepositoryBuilder().instance;
     }
 }

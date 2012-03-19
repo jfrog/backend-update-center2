@@ -31,6 +31,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.io.output.TeeOutputStream;
+import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
 import org.dom4j.Document;
@@ -139,6 +140,12 @@ public class Main {
     @Option(name = "-cap", usage = "Cap the version number and only report data that's compatible with ")
     public String cap = null;
 
+    @Option(name = "-repoUser", usage = "The username to authenticate as when communicating with the remote repository")
+    public String repoUser = null;
+
+    @Option(name = "-repoPass", usage = "The password to supply when communicating with the remote repository")
+    public String repoPass = null;
+
     public static final String EOL = System.getProperty("line.separator");
 
     public static void main(String[] args) throws Exception {
@@ -235,7 +242,12 @@ public class Main {
     }
 
     protected MavenRepository createRepository() throws Exception {
-        MavenRepository repo = DefaultMavenRepositoryBuilder.createStandardInstance(maxPlugins);
+        MavenRepository repo;
+        DefaultMavenRepositoryBuilder repoBuilder = new DefaultMavenRepositoryBuilder().withMaxPlugins(maxPlugins);
+        if (StringUtils.isNotBlank(repoUser)) {
+            repoBuilder.withCredentials(repoUser, repoPass);
+        }
+        repo = repoBuilder.getInstance();
         if (cap != null) {
             repo = new VersionCappedMavenRepository(repo, new VersionNumber(cap));
         }
@@ -406,7 +418,7 @@ public class Main {
                 Document pomDoc = readPOM(saxReader, pomFile);
                 Document parentPom = null;
                 if (pomDoc != null) {
-                    parentPom = resolveParentPom(repository, saxReader, pomDoc);
+                    parentPom = resolveParentPom(repository, latest.artifact, saxReader, pomDoc);
                 }
                 RemotePage hpiWikiPage = findPage(hpi.artifactId, pomDoc, cpl);
 
@@ -521,11 +533,11 @@ public class Main {
                     Document pomDoc = readPOM(saxReader, pomFile);
                     Document parentPom = null;
                     if (pomDoc != null) {
-                        parentPom = resolveParentPom(repository, saxReader, pomDoc);
+                        parentPom = resolveParentPom(repository, h.artifact, saxReader, pomDoc);
                     }
                     RemotePage hpiWikiPage = findPage(h.artifact.artifactId, pomDoc, cpl);
                     Plugin plugin = new Plugin(h, pomDoc, parentPom, hpiWikiPage, readLabels(hpiWikiPage, cpl));
-
+                    h.file = repository.resolve(h.artifact);
                     String title = plugin.getTitle();
                     if ((title == null) || (title.equals(""))) {
                         title = h.artifact.artifactId;
@@ -708,16 +720,19 @@ public class Main {
         return new SAXReader(factory);
     }
 
-    private Document resolveParentPom(MavenRepository repository, SAXReader saxReader, Document pomDoc)
+    private Document resolveParentPom(MavenRepository repository, GenericArtifactInfo childArtifact,
+            SAXReader saxReader, Document pomDoc)
             throws IOException {
         Element parent = (Element) selectSingleNode(pomDoc, "/project/parent");
         if (parent != null) {
-            File parentPomFile = repository.resolve(new GenericArtifactInfo("",
+            File parentPomFile = repository.resolve(new GenericArtifactInfo(childArtifact.repository,
                     parent.element("groupId").getTextTrim(),
                     parent.element("artifactId").getTextTrim(),
                     parent.element("version").getTextTrim(),
                     ""), "pom", null);
-            return readPOM(saxReader, parentPomFile);
+            if (parentPomFile != null) {
+                return readPOM(saxReader, parentPomFile);
+            }
         }
         return null;
     }

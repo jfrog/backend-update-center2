@@ -67,10 +67,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
 
 /**
@@ -196,45 +194,24 @@ public class NexusRepositoryImpl extends MavenRepository {
         return artifact.getFile();
     }
 
-    public Collection<PluginHistory> listHudsonPlugins() throws IOException {
+    protected void listHudsonPlugins(Map<String, PluginHistory> plugins) throws IOException {
         BooleanQuery q = new BooleanQuery();
         q.add(indexer.constructQuery(ArtifactInfo.PACKAGING, "hpi"), Occur.MUST);
 
         FlatSearchRequest request = new FlatSearchRequest(q);
         FlatSearchResponse response = indexer.searchFlat(request);
 
-        Map<String, PluginHistory> plugins =
-                new TreeMap<String, PluginHistory>(String.CASE_INSENSITIVE_ORDER);
-
         for (ArtifactInfo a : response.getResults()) {
-            if (a.version.contains("SNAPSHOT")) {
-                continue;       // ignore snapshots
+            HPI hpiInfo = createHpiArtifact(a);
+            if (isHpiValid(hpiInfo)) {
+                PluginHistory p = plugins.get(hpiInfo.artifact.artifactId);
+                if (p == null) {
+                    plugins.put(hpiInfo.artifact.artifactId, p = new PluginHistory(hpiInfo.artifact.artifactId));
+                }
+                p.addArtifact(hpiInfo);
+                p.groupId.add(hpiInfo.artifact.groupId);
             }
-            if (IGNORE.containsKey(a.artifactId) || IGNORE.containsKey(a.artifactId + "-" + a.version)) {
-                continue;       // artifactIds or particular versions to omit
-            }
-
-            PluginHistory p = plugins.get(a.artifactId);
-            if (p == null) {
-                plugins.put(a.artifactId, p = new PluginHistory(a.artifactId));
-            }
-            try {
-                p.addArtifact(createHpiArtifact(a));
-            } catch (IOException e) {
-                throw (IOException) new IOException("Failed to resolve artifact " + a).initCause(e);
-            }
-            p.groupId.add(a.groupId);
         }
-        return reduceToMaxPluginsIfSpecified(plugins.values());
-    }
-
-    private Collection<PluginHistory> reduceToMaxPluginsIfSpecified(Collection<PluginHistory> values) {
-        if (maxPlugins == null) {
-            return values;
-        }
-        System.out.println("Limiting the number of plugins handled to " + maxPlugins);
-        List<PluginHistory> result = new ArrayList<PluginHistory>(values);
-        return result.subList(0, maxPlugins);
     }
 
     protected void listWar(TreeMap<VersionNumber, HudsonWar> r, String groupId, VersionNumber cap) throws IOException {
@@ -246,22 +223,11 @@ public class NexusRepositoryImpl extends MavenRepository {
         FlatSearchResponse response = indexer.searchFlat(request);
 
         for (ArtifactInfo a : response.getResults()) {
-            if (a.version.contains("SNAPSHOT")) {
-                continue;       // ignore snapshots
+            HudsonWar warInfo = createHudsonWarArtifact(a);
+            if (isWarValid(warInfo, cap)) {
+                VersionNumber v = new VersionNumber(warInfo.version);
+                r.put(v, warInfo);
             }
-            if (!a.artifactId.equals("jenkins-war")
-                    && !a.artifactId.equals("hudson-war")) {
-                continue;      // somehow using this as a query results in 0 hits.
-            }
-            if (a.classifier != null) {
-                continue;          // just pick up the main war
-            }
-            if (cap != null && new VersionNumber(a.version).compareTo(cap) > 0) {
-                continue;
-            }
-
-            VersionNumber v = new VersionNumber(a.version);
-            r.put(v, createHudsonWarArtifact(a));
         }
     }
 
@@ -276,16 +242,6 @@ public class NexusRepositoryImpl extends MavenRepository {
 
     protected HudsonWar createHudsonWarArtifact(ArtifactInfo a) throws IOException {
         return new HudsonWar(getGenericArtifactInfo(a));
-    }
-
-    private static final Properties IGNORE = new Properties();
-
-    static {
-        try {
-            IGNORE.load(MavenRepository.class.getClassLoader().getResourceAsStream("artifact-ignores.properties"));
-        } catch (IOException e) {
-            throw new Error(e);
-        }
     }
 
     protected static final ArtifactRepositoryPolicy POLICY = new ArtifactRepositoryPolicy(true, "daily", "warn");

@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -67,5 +68,10 @@ public class VersionCappedMavenRepository extends MavenRepository {
     @Override
     protected void listWar(TreeMap<VersionNumber, HudsonWar> r, String groupId, VersionNumber cap) throws IOException {
         base.listWar(r, groupId, cap);
+    }
+
+    @Override
+    protected void listHudsonPlugins(Map<String, PluginHistory> plugins) throws IOException {
+        base.listHudsonPlugins(plugins);
     }
 }
