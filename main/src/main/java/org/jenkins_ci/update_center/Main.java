@@ -414,9 +414,12 @@ public class Main {
                     previous.file = repository.resolve(previous.artifact);
                 }
 
-                File pomFile = repository.resolvePOM(latest.artifact);
-                Document pomDoc = readPOM(saxReader, pomFile);
+                Document pomDoc = null;
                 Document parentPom = null;
+                File pomFile = repository.resolvePOM(latest.artifact);
+                if (pomFile != null) {
+                    pomDoc = readPOM(saxReader, pomFile);
+                }
                 if (pomDoc != null) {
                     parentPom = resolveParentPom(repository, latest.artifact, saxReader, pomDoc);
                 }
@@ -529,9 +532,12 @@ public class Main {
                 HPI h = rel.getValue();
                 JSONObject o = new JSONObject();
                 try {
-                    File pomFile = repository.resolvePOM(h.artifact);
-                    Document pomDoc = readPOM(saxReader, pomFile);
+                    Document pomDoc = null;
                     Document parentPom = null;
+                    File pomFile = repository.resolvePOM(h.artifact);
+                    if (pomFile != null) {
+                        pomDoc = readPOM(saxReader, pomFile);
+                    }
                     if (pomDoc != null) {
                         parentPom = resolveParentPom(repository, h.artifact, saxReader, pomDoc);
                     }
@@ -652,7 +658,7 @@ public class Main {
         }
     }
 
-    private RemotePage findPage(String artifactId, Document pomFile, ConfluencePluginList cpl) throws IOException {
+    private RemotePage findPage(String artifactId, Document pomDoc, ConfluencePluginList cpl) throws IOException {
         try {
             String p = Plugin.OVERRIDES.getProperty(artifactId);
             if (p != null) {
@@ -663,8 +669,8 @@ public class Main {
             e.printStackTrace();
         }
 
-        if (pomFile != null) {
-            String wikiPage = selectSingleValue(pomFile, "/project/url");
+        if (pomDoc != null) {
+            String wikiPage = selectSingleValue(pomDoc, "/project/url");
             if (wikiPage != null) {
                 try {
                     return cpl.getPage(wikiPage); // found the confluence page successfully

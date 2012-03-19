@@ -183,7 +183,7 @@ public class Plugin {
 
     public String getTitle() {
         String title = page != null ? page.getTitle() : null;
-        if (title == null) {
+        if ((title == null) && pom != null) {
             title = selectSingleValue(pom, "/project/name");
         }
         if (title == null) {
@@ -228,7 +228,7 @@ public class Plugin {
             json.put("scm", scm);
         }
 
-        if (!json.has("excerpt")) {
+        if (!json.has("excerpt") && (pom != null)) {
             // fall back to <description>, which is plain text but still better than nothing.
             String description = plainText2html(selectSingleValue(pom, "/project/description"));
             if (description != null) {

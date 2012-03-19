@@ -6,14 +6,19 @@ import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 import org.jenkins_ci.update_center.model.GenericArtifactInfo;
 import org.jenkins_ci.update_center.model.HPI;
@@ -43,6 +48,8 @@ public class ArtifactoryRepositoryImpl extends MavenRepository {
     private static String RESOLVE_REPO_KEY = "public";
 
     private DefaultHttpClient client;
+    private HttpHost targetHost = new HttpHost("repo.jenkins-ci.org", 80, "http");
+    private BasicHttpContext localcontext;
 
     public ArtifactoryRepositoryImpl() {
         client = new DefaultHttpClient();
@@ -55,9 +62,20 @@ public class ArtifactoryRepositoryImpl extends MavenRepository {
     public void setCredentials(String username, String password) {
         super.setCredentials(username, password);
         if (StringUtils.isNotBlank(username)) {
-            BasicCredentialsProvider provider = new BasicCredentialsProvider();
-            provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
-            client.setCredentialsProvider(provider);
+
+            client.getCredentialsProvider().setCredentials(
+                    new AuthScope(targetHost.getHostName(), targetHost.getPort()),
+                    new UsernamePasswordCredentials(username, password));
+
+            // Create AuthCache instance
+            AuthCache authCache = new BasicAuthCache();
+            // Generate BASIC scheme object and add it to the local auth cache
+            BasicScheme basicAuth = new BasicScheme();
+            authCache.put(targetHost, basicAuth);
+
+            // Add AuthCache to the execution context
+            localcontext = new BasicHttpContext();
+            localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);
         }
     }
 
@@ -70,8 +88,8 @@ public class ArtifactoryRepositoryImpl extends MavenRepository {
             filePathBuilder.append("-").append(classifier);
         }
         String filePath = filePathBuilder.append(".").append(type).toString();
-        HttpResponse fileGetResponse =
-                client.execute(new HttpGet(REPO_URL + "/" + RESOLVE_REPO_KEY + "/" + filePath));
+        HttpResponse fileGetResponse = client.execute(targetHost,
+                new HttpGet(REPO_URL + "/" + RESOLVE_REPO_KEY + "/" + filePath), localcontext);
         HttpEntity fileEntity = fileGetResponse.getEntity();
         StatusLine fileGetStatus = fileGetResponse.getStatusLine();
         if (HttpStatus.SC_OK != fileGetStatus.getStatusCode()) {
@@ -113,7 +131,8 @@ public class ArtifactoryRepositoryImpl extends MavenRepository {
                 searchUrlBuilder.append(",");
             }
         }
-        HttpResponse searchResponse = client.execute(new HttpGet(searchUrlBuilder.toString()));
+        HttpResponse searchResponse = client.execute(targetHost, new HttpGet(searchUrlBuilder.toString()),
+                localcontext);
         HttpEntity searchResultEntity = searchResponse.getEntity();
         StatusLine statusLine = searchResponse.getStatusLine();
         if (HttpStatus.SC_OK != statusLine.getStatusCode()) {
@@ -150,7 +169,8 @@ public class ArtifactoryRepositoryImpl extends MavenRepository {
                 searchUrlBuilder.append(",");
             }
         }
-        HttpResponse searchResponse = client.execute(new HttpGet(searchUrlBuilder.toString()));
+        HttpResponse searchResponse = client.execute(targetHost, new HttpGet(searchUrlBuilder.toString()),
+                localcontext);
         HttpEntity searchResultEntity = searchResponse.getEntity();
         StatusLine statusLine = searchResponse.getStatusLine();
         if (HttpStatus.SC_OK != statusLine.getStatusCode()) {
