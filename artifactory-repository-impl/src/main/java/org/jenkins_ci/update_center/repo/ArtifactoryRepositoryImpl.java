@@ -88,6 +88,10 @@ public class ArtifactoryRepositoryImpl extends MavenRepository {
             filePathBuilder.append("-").append(classifier);
         }
         String filePath = filePathBuilder.append(".").append(type).toString();
+        File resolvedFilePath = new File(new File(System.getProperty("user.home"), ".m2/repository"), filePath);
+        if (resolvedFilePath.exists()) {
+            return resolvedFilePath;
+        }
         HttpResponse fileGetResponse = client.execute(targetHost,
                 new HttpGet(REPO_URL + "/" + RESOLVE_REPO_KEY + "/" + filePath), localcontext);
         HttpEntity fileEntity = fileGetResponse.getEntity();
@@ -97,7 +101,6 @@ public class ArtifactoryRepositoryImpl extends MavenRepository {
             EntityUtils.consume(fileEntity);
             return null;
         }
-        File resolvedFilePath = new File(new File(System.getProperty("user.home"), ".m2/repository"), filePath);
         InputStream fileContent = null;
         try {
             fileContent = fileEntity.getContent();
