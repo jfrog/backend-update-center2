@@ -152,6 +152,10 @@ public class Main {
     @Option(name = "-repoPass", usage = "The password to supply when communicating with the remote repository")
     public String repoPass = null;
 
+    @Option(name = "-repoImpl", usage = "The Maven repository implementation to use; " +
+            "may be 'artifactory' or 'nexus'. Artifactory is used by default")
+    public String repoImpl = null;
+
     public static final String EOL = System.getProperty("line.separator");
 
     public static void main(String[] args) throws Exception {
@@ -186,7 +190,7 @@ public class Main {
 
     public void run() throws Exception {
 
-        MavenRepository repo = createRepository();
+        MavenRepository repo = createRepository(repoImpl);
 
         PrintWriter latestRedirect = createHtaccessWriter();
 
@@ -247,9 +251,10 @@ public class Main {
         return prettyPrint ? json.toString(2) : json.toString();
     }
 
-    protected MavenRepository createRepository() throws Exception {
+    protected MavenRepository createRepository(String repoImpl) throws Exception {
         MavenRepository repo;
-        DefaultMavenRepositoryBuilder repoBuilder = new DefaultMavenRepositoryBuilder().withMaxPlugins(maxPlugins);
+        DefaultMavenRepositoryBuilder repoBuilder = new DefaultMavenRepositoryBuilder(repoImpl)
+                .withMaxPlugins(maxPlugins);
         if (StringUtils.isNotBlank(repoUser)) {
             repoBuilder.withCredentials(repoUser, repoPass);
         }

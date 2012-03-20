@@ -25,12 +25,21 @@ package org.jenkins_ci.update_center;
 
 import org.jenkins_ci.update_center.repo.ArtifactoryRepositoryImpl;
 import org.jenkins_ci.update_center.repo.MavenRepository;
+import org.jenkins_ci.update_center.repo.NexusRepositoryImpl;
 
 public class DefaultMavenRepositoryBuilder {
     private MavenRepository instance = null;
 
     public DefaultMavenRepositoryBuilder() throws Exception {
-        instance = new ArtifactoryRepositoryImpl();
+        this(null);
+    }
+
+    public DefaultMavenRepositoryBuilder(String repoImpl) throws Exception {
+        if ("nexus".equals(repoImpl)) {
+            instance = new NexusRepositoryImpl();
+        } else {
+            instance = new ArtifactoryRepositoryImpl();
+        }
     }
 
     public DefaultMavenRepositoryBuilder withMaxPlugins(Integer maxPlugins) {

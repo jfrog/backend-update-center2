@@ -23,6 +23,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>nexus-repository-impl</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jvnet.hudson</groupId>
             <artifactId>crypto-util</artifactId>
         </dependency>
