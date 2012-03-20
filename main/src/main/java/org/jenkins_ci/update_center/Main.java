@@ -140,9 +140,15 @@ public class Main {
     @Option(name = "-cap", usage = "Cap the version number and only report data that's compatible with ")
     public String cap = null;
 
+    /**
+     * Used as auth principal for all requests to the remote repository
+     */
     @Option(name = "-repoUser", usage = "The username to authenticate as when communicating with the remote repository")
     public String repoUser = null;
 
+    /**
+     * Used as auth password for all requests to the remote repository
+     */
     @Option(name = "-repoPass", usage = "The password to supply when communicating with the remote repository")
     public String repoPass = null;
 
@@ -743,19 +749,23 @@ public class Main {
         return null;
     }
 
-    private void checkLatestDate(MavenRepository repository, Collection<HPI> artifacts, HPI latestByVersion)
-            throws IOException {
-        TreeMap<Long, HPI> artifactsByDate = new TreeMap<Long, HPI>();
-        for (HPI h : artifacts) {
-            h.file = repository.resolve(h.artifact);
-            artifactsByDate.put(h.getTimestamp(), h);
-        }
-        HPI latestByDate = artifactsByDate.get(artifactsByDate.lastKey());
-        if (latestByDate != latestByVersion) {
-            System.out.println(
-                    "** Latest-by-version (" + latestByVersion.version + ','
-                            + latestByVersion.getTimestampAsString() + ") doesn't match latest-by-date ("
-                            + latestByDate.version + ',' + latestByDate.getTimestampAsString() + ')');
+    private void checkLatestDate(MavenRepository repository, Collection<HPI> artifacts, HPI latestByVersion) {
+        try {
+            TreeMap<Long, HPI> artifactsByDate = new TreeMap<Long, HPI>();
+            for (HPI h : artifacts) {
+                h.file = repository.resolve(h.artifact);
+                artifactsByDate.put(h.getTimestamp(), h);
+            }
+            HPI latestByDate = artifactsByDate.get(artifactsByDate.lastKey());
+            if (latestByDate != latestByVersion) {
+                System.out.println(
+                        "** Latest-by-version (" + latestByVersion.version + ','
+                                + latestByVersion.getTimestampAsString() + ") doesn't match latest-by-date ("
+                                + latestByDate.version + ',' + latestByDate.getTimestampAsString() + ')');
+            }
+        } catch (IOException e) {
+            System.out.println("Unable to check for the latest plugin version by date of '" +
+                    latestByVersion.artifact.artifactId + "': " + e.getMessage());
         }
     }
 
